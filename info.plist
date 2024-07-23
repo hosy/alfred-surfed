@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string>app.surfed.extension.alfred</string>
+	<key>category</key>
+	<string>Internet</string>
+	<key>connections</key>
+	<dict>
+		<key>AFC44E43-74F6-4178-9358-E3EE0CFD7FDB</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>661BFD3C-694F-478E-AE29-1743410AF427</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+	</dict>
+	<key>createdby</key>
+	<string>Matthias Hühne</string>
+	<key>description</key>
+	<string>Search Collections, Tags, URLs and Browsing History</string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Surfed</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>68</integer>
+				<key>keyword</key>
+				<string>su</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string>Searching…</string>
+				<key>script</key>
+				<string>import json
+import os
+import subprocess
+import sys
+
+# Path to surfed-cli
+cli_path = "/Applications/Surfed.app/Contents/MacOS/surfed-cli.app/Contents/MacOS/surfed-cli"
+
+def check_cli_path():
+    if not os.path.exists(cli_path):
+        print(json.dumps({"items": [{"title": "Surfed App not found", "subtitle": "Please install Surfed before using this workflow.", "valid": False}]}))
+        sys.exit(1)
+
+def fetch_urls(query):
+    if len(query) &gt; 2:
+        check_cli_path()
+        apikey = os.getenv("SURFED_API_KEY", "")
+        command = f'{cli_path} "{query}" -j -a -l 50'
+        if apikey:
+            command += f' --key {apikey}'
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                check=True,
+                shell=True  # This allows the command string to be interpreted correctly
+            )
+            return json.loads(result.stdout)
+        except subprocess.CalledProcessError as e:
+            print(json.dumps({"items": [{"title": "Error", "subtitle": str(e), "valid": False}]}))
+            sys.exit(1)
+    return {"urls": [], "collections": [], "tags": []}
+
+def format_for_alfred(data):
+    items = []
+    for collection in data.get("collections", []):
+        items.append({
+            "title": collection["title"],
+            "subtitle": collection["url"],
+            "arg": collection["url"],
+            "icon": {"path": "collection-icon.png"}
+        })
+    for tag in data.get("tags", []):
+        items.append({
+            "title": tag["title"],
+            "subtitle": tag["url"],
+            "arg": tag["url"],
+            "icon": {"path": "tag-icon.png"}
+        })
+    for url in data.get("urls", []):
+        items.append({
+            "title": url.get("title", url["url"]),
+            "subtitle": url["url"],
+            "arg": url["url"],
+            "icon": {"path": url["imagePath"]}
+        })
+    return {"items": items}
+
+if __name__ == "__main__":
+    query = " ".join(sys.argv[1:])
+    data = fetch_urls(query)
+    output = format_for_alfred(data)
+    print(json.dumps(output))</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Enter search terms or shortcuts e.g.: u:surfed.app t:Surfed :lw "Foo bar"</string>
+				<key>title</key>
+				<string>Search Collections, Tags, URLs and Browsing History</string>
+				<key>type</key>
+				<integer>9</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>AFC44E43-74F6-4178-9358-E3EE0CFD7FDB</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>browser</key>
+				<string></string>
+				<key>skipqueryencode</key>
+				<false/>
+				<key>skipvarencode</key>
+				<false/>
+				<key>spaces</key>
+				<string></string>
+				<key>url</key>
+				<string></string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.openurl</string>
+			<key>uid</key>
+			<string>661BFD3C-694F-478E-AE29-1743410AF427</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string># Surfed
+
+Surfed is a Unified browser history and bookmark manager, as well as a web automation tool for macOS and iOS. Search and filter your browsing history using multiple search terms and full-text search.
+
+With the Alfred Workflow you can search your Collections, Tags, URLs and Browsing History in Surfed.
+
+For more information about Surfed visit [surfed.app](https://surfed.app).
+
+
+## Which filter types are available to search in the browser history, websites, tag and collection lists?
+
+### Filter
+
+- Key Fields (Title, URL, Meta Description) `a:{term}`
+- URL `u:{term}`
+- Title `t:{term}`
+- Meta Description `m:{term}`
+- Tag `#{term}`
+- Note `n:{term}`
+- Article `c:{term}`
+- Author `p:{term}`
+- Language `l:{term}`
+
+Replace `{term}` with your search string.
+Add a `!` before the shortcut to negate the filter e.g. `!u:{term}`.
+
+### State
+
+- Flagged `:f`
+- Favorited `:s`
+- Private Mode `:f`
+- Listened `:l`
+- Listening `:lg`
+- Read `:r`
+
+Add a `!` before the shortcut to negate the filter e.g. `!u:{term}`.
+
+### Date and Time
+
+
+- Yesterday `:ld`
+- Current Week `:w`
+- Current Month `:m`
+- Current Day `:d`
+- Current Year `:y`
+- Last Week `:lw`
+- Last Month `:lm`
+- Last Day `:ld`
+- Last Year `:f`
+- Day `da:{1-31}`
+- Month `mo:{1-12}`
+- Year `ye:{year}`
+- Weekday `wd:{1-7}`
+- Morning `:tm`
+- Afternoon `:ta`
+- Evening `:te`
+- At Night `:tn`
+
+Add a `!` before the shortcut to negate the filter e.g. `!u:{term}`.
+
+## Configuration
+
+If Surfed is protected by an password you have to enter the Surfed API-Key `Surfed.app &gt; Settings &gt; API-Key` in the Raycast preferences to get search results.</string>
+	<key>uidata</key>
+	<dict>
+		<key>661BFD3C-694F-478E-AE29-1743410AF427</key>
+		<dict>
+			<key>xpos</key>
+			<real>375</real>
+			<key>ypos</key>
+			<real>235</real>
+		</dict>
+		<key>AFC44E43-74F6-4178-9358-E3EE0CFD7FDB</key>
+		<dict>
+			<key>xpos</key>
+			<real>140</real>
+			<key>ypos</key>
+			<real>235</real>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>Enter Surfed API Key</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string>Enter your API key if Surfed is password protected. Surfed › Preferences › Permissions</string>
+			<key>label</key>
+			<string>Surfed API Key</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>SURFED_API_KEY</string>
+		</dict>
+	</array>
+	<key>variablesdontexport</key>
+	<array/>
+	<key>version</key>
+	<string>1.0</string>
+	<key>webaddress</key>
+	<string>https://surfed.app</string>
+</dict>
+</plist>
