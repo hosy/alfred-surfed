@@ -3,7 +3,7 @@
 Surfed is a Unified browser history and bookmark manager, as well as a web automation tool for macOS and iOS. Search and filter your browsing history using multiple search terms and full-text search.
 For more information about Surfed visit [surfed.app](https://surfed.app).
 
-With the Alfred workflow you can search your Collections, Tags, URLs and Browsing History in Surfed.
+With the Alfred workflow you can search your Collections, Tags, URLs and Browsing History in Surfed and open the link directly in your Browser or Surfed.
 
 [Download Alfred Workflow](https://github.com/hosy/alfred-surfed/releases)
 
